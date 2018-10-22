@@ -1,1 +1,1 @@
-ubuntu18.04 nginx
+debian 9 nginx
