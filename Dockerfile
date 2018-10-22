@@ -1,6 +1,8 @@
 FROM debian:stretch-slim
 
-RUN apt-get update && \
+RUN echo "deb http://nginx.org/packages/mainline/debian/ stretch nginx" >> /etc/apt/sources.list.d/nginx.list && \
+    echo "deb-src http://nginx.org/packages/mainline/debian/ stretch nginx" >> /etc/apt/sources.list.d/nginx.list && \
+	apt-get update && \
 	apt-get -y install nginx openssl && \
 	openssl req \
 	    -x509 \
