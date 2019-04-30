@@ -1,9 +1,7 @@
-FROM debian:stretch-slim
+FROM nginx:latest
 
-RUN echo "deb http://nginx.org/packages/mainline/debian/ stretch nginx" >> /etc/apt/sources.list.d/nginx.list && \
-    echo "deb-src http://nginx.org/packages/mainline/debian/ stretch nginx" >> /etc/apt/sources.list.d/nginx.list && \
-	apt-get update && \
-	apt-get -y install nginx openssl && \
+RUN apt-get update && \
+	apt-get -y install openssl && \
 	openssl req \
 	    -x509 \
 	    -newkey rsa:2048 \
@@ -19,16 +17,17 @@ RUN echo "deb http://nginx.org/packages/mainline/debian/ stretch nginx" >> /etc/
     rm -rf /usr/share/man/?? && \
     rm -rf /usr/share/man/??_* && \
     rm -rf /etc/nginx/nginx.conf && \
-    rm -rf /etc/nginx/sites-enabled/default && \
-    rm -rf /etc/nginx/sites-available/default
+    rm -rf /etc/nginx/conf.d/default.conf && \
+    mkdir /var/www && \
+    mkdir /var/www/html && \
+    chown -Rf www-data:www-data /var/www/html
+
 
 COPY conf/nginx.conf /etc/nginx/nginx.conf
-COPY conf/site/ /etc/nginx/sites-available/
+COPY conf/site/ /etc/nginx/conf.d/
 COPY script/start.sh /usr/local/bin/start.sh
 
-RUN ln -s /etc/nginx/sites-available/default.conf /etc/nginx/sites-enabled/default.conf && \
-	ln -s /etc/nginx/sites-available/default-ssl.conf /etc/nginx/sites-enabled/default-ssl.conf && \
-	chmod 755 /usr/local/bin/start.sh
+RUN chmod 755 /usr/local/bin/start.sh
 
 EXPOSE 443 80
 

@@ -2,15 +2,9 @@
 
 # Disable Strict Host checking for non interactive git clones
 
-if [ ! -z "$SSH_KEY" ]; then
- echo $SSH_KEY > /root/.ssh/id_rsa.base64
- base64 -d /root/.ssh/id_rsa.base64 > /root/.ssh/id_rsa
- chmod 600 /root/.ssh/id_rsa
-fi
-
 # Set custom webroot
 if [ ! -z "$WEBROOT" ]; then
- sed -i "s#root /var/www/html;#root ${WEBROOT};#g" /etc/nginx/sites-available/default.conf
+ sed -i "s#root   /var/www/html;#root   ${WEBROOT};#g" /etc/nginx/conf.d/default.conf
 else
  webroot=/var/www/html
 fi
@@ -20,19 +14,6 @@ fi
 # sed -i "s#server_name _;#server_name ${DOMAIN};#g" /etc/nginx/sites-available/default-ssl.conf
 #fi
 
-# Enable custom nginx config files if they exist
-if [ -f /var/www/html/conf/nginx/nginx.conf ]; then
-  cp /var/www/html/conf/nginx/nginx.conf /etc/nginx/nginx.conf
-fi
-
-if [ -f /var/www/html/conf/nginx/nginx-site.conf ]; then
-  cp /var/www/html/conf/nginx/nginx-site.conf /etc/nginx/sites-available/default.conf
-fi
-
-if [ -f /var/www/html/conf/nginx/nginx-site-ssl.conf ]; then
-  cp /var/www/html/conf/nginx/nginx-site-ssl.conf /etc/nginx/sites-available/default-ssl.conf
-fi
-
 
 # Prevent config files from being filled to infinity by force of stop and restart the container
 #lastlinephpconf="$(grep "." /usr/local/etc/php-fpm.conf | tail -1)"
@@ -40,30 +21,11 @@ fi
 # sed -i '$ d' /usr/local/etc/php-fpm.conf
 #fi
 
-# Display Version Details or not
-if [[ "$HIDE_NGINX_HEADERS" == "0" ]] ; then
- sed -i "s/server_tokens off;/server_tokens on;/g" /etc/nginx/nginx.conf
-fi
 
-# Pass real-ip to logs when behind ELB, etc
-if [ "$REAL_IP_HEADER" == "1" ] ; then
- sed -i "s/#real_ip_header X-Forwarded-For;/real_ip_header X-Forwarded-For;/" /etc/nginx/sites-available/default.conf
- sed -i "s/#set_real_ip_from/set_real_ip_from/" /etc/nginx/sites-available/default.conf
- if [ ! -z "$REAL_IP_FROM" ]; then
-  sed -i "s#172.16.0.0/12#$REAL_IP_FROM#" /etc/nginx/sites-available/default.conf
- fi
-fi
 # Do the same for SSL sites
-if [ -f /etc/nginx/sites-available/default-ssl.conf ]; then
-  if [[ "$REAL_IP_HEADER" == "1" ]] ; then
-    sed -i "s/#real_ip_header X-Forwarded-For;/real_ip_header X-Forwarded-For;/" /etc/nginx/sites-available/default-ssl.conf
-    sed -i "s/#set_real_ip_from/set_real_ip_from/" /etc/nginx/sites-available/default-ssl.conf
-    if [ ! -z "$REAL_IP_FROM" ]; then
-     sed -i "s#172.16.0.0/12#$REAL_IP_FROM#" /etc/nginx/sites-available/default-ssl.conf
-    fi
-  fi
+if [ -f /etc/nginx/conf.d/default-ssl.conf ]; then
   if [ ! -z "$WEBROOT" ]; then
-   sed -i "s#root /var/www/html;#root ${WEBROOT};#g" /etc/nginx/sites-available/default-ssl.conf
+   sed -i "s#root   /var/www/html;#root   ${WEBROOT};#g" /etc/nginx/conf.d/default-ssl.conf
   fi
 fi
 
@@ -80,6 +42,7 @@ else
   fi
 fi
 
-rm -rf /var/run/nginx.pid
+# rm -rf /var/run/nginx.pid
 # Start supervisord and services
-exec /usr/sbin/nginx -g "daemon off;"
+exec nginx -g "daemon off;"
+
